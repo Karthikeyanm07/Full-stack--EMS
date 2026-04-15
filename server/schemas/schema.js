@@ -14,7 +14,10 @@ export const createEmployeeSchema = z.object({
 		.string()
 		.toLowerCase()
 		.pipe(z.email({ error: "Invalid email address" })),
-	password: z.string(),
+	password: z
+		.string()
+		.min(8, "Password must be at least 8 characters")
+		.max(128, "Password cannot exceed 128 characters"),
 	phone: z.string().regex(/^[0-9\-\+\(\)]{10,}$/, "Invalid phone number"),
 	position: z.string().min(2, "Position must be at least 2 characters"),
 	department: z.enum(DEPARTMENTS).default("Engineering"),
@@ -25,10 +28,10 @@ export const createEmployeeSchema = z.object({
 	joinDate: z.iso.datetime({ error: "Invalid date format" }),
 	role: z
 		.enum(["ADMIN", "EMPLOYEE"], {
-			errorMap: () => ({ message: "Role must be ADMIN or EMPLOYEE" }),
+			error: "Role must be ADMIN or EMPLOYEE",
 		})
 		.default("EMPLOYEE"),
 	bio: z.string().max(500, "Bio cannot exceed 500 characters").default(""),
 });
 
-export const updateEmployeeSchema = createEmployeeSchema.partial();
+export const updateEmployeeSchema = createEmployeeSchema.required().partial();

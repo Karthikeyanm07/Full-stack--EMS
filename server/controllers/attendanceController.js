@@ -29,8 +29,9 @@ export const clockInOut = async (req, res) => {
 
 		if (!existing) {
 			const isLate =
-				now.getHours() >= 9 &&
-				(now.getHours() > 9 || now.getMinutes() > 0);
+				now.getHours() >= 9 ||
+				(now.getHours() === 9 &&
+					(now.getMinutes() > 0 || now.getSeconds() > 0));
 
 			const attendance = await Attendance.create({
 				employeeId: employee._id,
@@ -109,10 +110,10 @@ export const getAttendance = async (req, res) => {
 			.sort({ date: -1 })
 			.limit(limit);
 
-        return res.json({
-            data: history,
-            employee: {isDeleted: employee.isDeleted}
-        })
+		return res.json({
+			data: history,
+			employee: { isDeleted: employee.isDeleted },
+		});
 	} catch (error) {
 		return res.status(500).json({ error: "Failed to fetch attendance" });
 	}
