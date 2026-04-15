@@ -77,10 +77,10 @@ export const getLeaves = async (req, res) => {
 			});
 
 			return res.json({ data });
-		} 
-        // If it's Find all leaves for this employee
-        else {
-			const employee = Employee.findOne({
+		}
+		// If it's Find all leaves for this employee
+		else {
+			const employee = await Employee.findOne({
 				userId: session.userId,
 			}).lean();
 			if (!employee) {
@@ -105,6 +105,9 @@ export const getLeaves = async (req, res) => {
 // GET /api/leaves/:id
 export const updateLeaveStatus = async (req, res) => {
 	try {
+		if (req.session.role !== "ADMIN") {
+			return res.status(403).json({ error: "Unauthorized" });
+		}
 		const { status } = req.body;
 
 		if (!["APPROVED", "REJECTED", "PENDING"].includes(status)) {
@@ -117,6 +120,11 @@ export const updateLeaveStatus = async (req, res) => {
 			{ returnDocument: "after" },
 		);
 
+		if (!leave) {
+			return res
+				.status(404)
+				.json({ error: "Leave application not found" });
+		}
 		return res.json({ success: true, data: leave });
 	} catch (error) {
 		return res.status(500).json({ error: "Failed" });

@@ -41,10 +41,11 @@ export const updateProfile = async (req, res) => {
 		}
 
 		// Because employee can only update BIO
-		const bio = typeof req.body.bio === "string" ? req.body.bio : "";
-		await Employee.findByIdAndUpdate(employee._id, {
-			bio,
-		});
+		if (typeof req.body.bio === "string") {
+			await Employee.findByIdAndUpdate(employee._id, {
+				bio: req.body.bio,
+			});
+		}
 
 		return res.json({ success: true, message: "Updated successfully" });
 	} catch (error) {
