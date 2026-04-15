@@ -13,7 +13,7 @@ export const login = async (req, res) => {
 				.json({ error: "Email and Password required" });
 		}
 
-		const user = await User.findOne({ email });
+		const user = await User.findOne({ email }).select("+password");
 		if (!user) {
 			return res.status(401).json({ error: "Invalid credentials" });
 		}
@@ -73,7 +73,7 @@ export const changePassword = async (req, res) => {
 			});
 		}
 
-		const user = await User.findById(session.userId);
+		const user = await User.findById(session.userId).select("+password");
 		if (!user) {
 			return res.status(404).json({ error: "User not found" });
 		}

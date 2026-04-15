@@ -29,7 +29,7 @@ export const clockInOut = async (req, res) => {
 
 		if (!existing) {
 			const isLate =
-				now.getHours() >= 9 ||
+				now.getHours() > 9 ||
 				(now.getHours() === 9 &&
 					(now.getMinutes() > 0 || now.getSeconds() > 0));
 
