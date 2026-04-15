@@ -34,7 +34,7 @@ export const getEmployees = async (req, res) => {
 
 		return res.json(result);
 	} catch (error) {
-		res.status(500).json({
+		return res.status(500).json({
 			error: `Failed to fetch employees, ${error.message}`,
 		});
 	}
@@ -50,7 +50,7 @@ export const createEmployee = async (req, res) => {
 		const validData = createEmployeeSchema.parse(req.body);
 
 		// Check if email already exists
-		const existingUser = await User.findOne({ email: validData.email });
+		const existingUser = await User.findOne({ email: validData.email }).session(session);
 		if (existingUser) {
 			await session.abortTransaction();
 			return res.status(400).json({ error: "Email already exists" });
