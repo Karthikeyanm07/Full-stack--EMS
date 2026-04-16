@@ -20,6 +20,7 @@ export const clockInOut = async (req, res) => {
 			});
 		}
 
+		const now = new Date();
 		const today = new Date(
 			Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()),
 		);
@@ -29,13 +30,11 @@ export const clockInOut = async (req, res) => {
 			date: today,
 		});
 
-		const now = new Date();
-
 		if (!existing) {
 			const isLate =
 				now.getUTCHours() > 9 ||
 				(now.getUTCHours() === 9 &&
-					(now.getMinutes() > 0 || now.getSeconds() > 0));
+					(now.getUTCMinutes() > 0 || now.getUTCSeconds() > 0));
 
 			const attendance = await Attendance.create({
 				employeeId: employee._id,

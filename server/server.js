@@ -9,6 +9,7 @@ import profileRoutes from "./routes/profileRoutes.js";
 import attendanceRoutes from "./routes/attendanceRoutes.js";
 import leaveRoutes from "./routes/leaveRoutes.js";
 import payslipRoutes from "./routes/payslipRoutes.js";
+import dashboardRoutes from "./routes/dashboardRoutes.js";
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -26,6 +27,7 @@ app.use("/api/profile", profileRoutes);
 app.use("/api/attendance", attendanceRoutes);
 app.use("/api/leave", leaveRoutes);
 app.use("/api/payslips", payslipRoutes);
+app.use("/api/dashboard", dashboardRoutes);
 
 try {
 	await connectDB();
