@@ -21,6 +21,7 @@ const employeeSchema = new Schema(
 		email: {
 			type: String,
 			required: true,
+			lowercase: true,
 		},
 		phone: {
 			type: String,

@@ -36,6 +36,8 @@ const payslipSchema = new Schema(
 	{ timestamps: true },
 );
 
+payslipSchema.index({ employeeId: 1, year: 1, month: 1 }, { unique: true });
+
 const Payslip = models.Payslip || model("Payslip", payslipSchema);
 
 export default Payslip;

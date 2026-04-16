@@ -8,28 +8,35 @@ export const login = async (req, res) => {
 	try {
 		const { email, password, role_type } = req.body;
 		if (!email || !password) {
-			return res
-				.status(400)
-				.json({ error: "Email and Password required" });
+			return res.status(400).json({
+				success: false,
+				error: "Email and password are required.",
+			});
 		}
 
 		const user = await User.findOne({ email }).select("+password");
 		if (!user) {
-			return res.status(401).json({ error: "Invalid credentials" });
+			return res
+				.status(401)
+				.json({ success: false, error: "Invalid credentials." });
 		}
 
 		const isValid = await bcrypt.compare(password, user.password);
 		if (!isValid) {
-			return res.status(401).json({ error: "Invalid credentials!" });
+			return res
+				.status(401)
+				.json({ success: false, error: "Invalid credentials." });
 		}
 
 		if (role_type === "admin" && user.role !== "ADMIN") {
-			return res.status(401).json({ error: "Not authorized as Admin" });
+			return res
+				.status(401)
+				.json({ success: false, error: "Not authorized as admin." });
 		}
 		if (role_type === "employee" && user.role !== "EMPLOYEE") {
 			return res
 				.status(401)
-				.json({ error: "Not authorized as Employee" });
+				.json({ success: false, error: "Not authorized as employee." });
 		}
 
 		// If find logged in user
@@ -44,12 +51,16 @@ export const login = async (req, res) => {
 			expiresIn: "7d",
 		});
 
-		return res.json({ success: true, user: payload, token });
+		return res.status(200).json({
+			success: true,
+			message: "Login successful.",
+			data: { user: payload, token },
+		});
 	} catch (error) {
 		console.error("Login error:", error);
-		return res.status(500).json({
-			error: "Login failed. Please try again.",
-		});
+		return res
+			.status(500)
+			.json({ success: false, error: "Login failed. Please try again." });
 	}
 };
 
@@ -57,7 +68,11 @@ export const login = async (req, res) => {
 // GET /api/auth/session
 export const session = (req, res) => {
 	const session = req.session;
-	return res.json({ user: session });
+	return res.status(200).json({
+		success: true,
+		message: "Session retrieved successfully.",
+		user: session,
+	});
 };
 
 // Change password functionality for Employee and Admin
@@ -69,33 +84,47 @@ export const changePassword = async (req, res) => {
 		const { currentPassword, newPassword } = req.body;
 		if (!currentPassword || !newPassword) {
 			return res.status(400).json({
-				error: "Current password and new password are required",
+				success: false,
+				error: "Current password and new password are required.",
 			});
+		}
+
+		if (newPassword.length < 8) {
+			return res
+				.status(400)
+				.json({
+					success: false,
+					error: "New password must be at least 8 characters.",
+				});
 		}
 
 		const user = await User.findById(session.userId).select("+password");
 		if (!user) {
-			return res.status(404).json({ error: "User not found" });
+			return res
+				.status(404)
+				.json({ success: false, error: "User not found." });
 		}
 
 		const isValid = await bcrypt.compare(currentPassword, user.password);
 		if (!isValid) {
-			return res
-				.status(400)
-				.json({ error: "Current password is incorrect" });
+			return res.status(400).json({
+				success: false,
+				error: "Current password is incorrect.",
+			});
 		}
 
 		const hashed = await bcrypt.hash(newPassword, 10);
 
 		await User.findByIdAndUpdate(session.userId, { password: hashed });
 
-		return res.json({
+		return res.status(200).json({
 			success: true,
-			message: "Password changed successfully",
+			message: "Password changed successfully.",
 		});
 	} catch (error) {
 		console.error("Change password error:", error);
 		return res.status(500).json({
+			success: false,
 			error: "Failed to change password. Please try again.",
 		});
 	}

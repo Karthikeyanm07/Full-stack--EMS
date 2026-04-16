@@ -38,9 +38,11 @@ export const updateEmployeeSchema = createEmployeeSchema.required().partial();
 
 export const createPayslipSchema = z.object({
 	employeeId: z.string(),
-	year: z.coerce.number(), // Turns "2024" into 2024
+	year: z.coerce.number().min(2000).max(2100), // Turns "2024" into 2024
 	month: z.coerce.number().min(1).max(12),
-	basicSalary: z.coerce.number(),
+	basicSalary: z.coerce
+		.number()
+		.positive("Basic salary must be greater than 0"),
 	allowances: z.coerce.number().default(0),
 	deductions: z.coerce.number().default(0),
 });
