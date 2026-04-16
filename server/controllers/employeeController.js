@@ -8,7 +8,7 @@ import {
 	updateEmployeeSchema,
 } from "../schemas/schema.js";
 
-// GET_EMPLOYESS -> /api/employees
+// GET_EMPLOYEES -> /api/employees
 export const getEmployees = async (req, res) => {
 	try {
 		const { department } = req.query;
@@ -32,11 +32,15 @@ export const getEmployees = async (req, res) => {
 				: null,
 		}));
 
-		return res.json(result);
-	} catch (error) {
-		return res.status(500).json({
-			error: `Failed to fetch employees, ${error.message}`,
+		return res.status(200).json({
+			success: true,
+			message: "Employees fetched successfully.",
+			data: result,
 		});
+	} catch (error) {
+		return res
+			.status(500)
+			.json({ success: false, error: "Failed to fetch employees." });
 	}
 };
 
@@ -50,10 +54,14 @@ export const createEmployee = async (req, res) => {
 		const validData = createEmployeeSchema.parse(req.body);
 
 		// Check if email already exists
-		const existingUser = await User.findOne({ email: validData.email }).session(session);
+		const existingUser = await User.findOne({
+			email: validData.email,
+		}).session(session);
 		if (existingUser) {
 			await session.abortTransaction();
-			return res.status(400).json({ error: "Email already exists" });
+			return res
+				.status(400)
+				.json({ success: false, error: "Email already exists." });
 		}
 
 		// Encrypt user password
@@ -95,7 +103,11 @@ export const createEmployee = async (req, res) => {
 		// Commit transaction
 		await session.commitTransaction();
 
-		return res.status(201).json({ success: true, employee: employee[0] });
+		return res.status(201).json({
+			success: true,
+			message: "Employee created successfully.",
+			data: { employee: employee[0] },
+		});
 	} catch (error) {
 		// Abort transaction on any error
 		await session.abortTransaction();
@@ -107,16 +119,22 @@ export const createEmployee = async (req, res) => {
 				message: issue.message,
 				code: issue.code,
 			}));
-			return res.status(400).json({ errors: formattedErrors });
+			return res
+				.status(400)
+				.json({ success: false, errors: formattedErrors });
 		}
 
 		// Handle duplicate email error
 		if (error.code === 11000) {
-			return res.status(400).json({ error: "Email already exists" });
+			return res
+				.status(400)
+				.json({ success: false, error: "Email already exists." });
 		}
 
 		console.error("Creating employee error:", error);
-		return res.status(500).json({ error: "Failed to create employee" });
+		return res
+			.status(500)
+			.json({ success: false, error: "Failed to create employee." });
 	} finally {
 		session.endSession();
 	}
@@ -136,7 +154,9 @@ export const updateEmployee = async (req, res) => {
 
 		if (!employee) {
 			await session.abortTransaction();
-			return res.status(404).json({ error: "Employee not found" });
+			return res
+				.status(404)
+				.json({ success: false, error: "Employee not found." });
 		}
 
 		await Employee.findByIdAndUpdate(
@@ -151,7 +171,9 @@ export const updateEmployee = async (req, res) => {
 				basicSalary: employeeData.basicSalary,
 				allowances: employeeData.allowances,
 				deductions: employeeData.deductions,
-				employmentStatus: employeeData.employmentStatus || "ACTIVE",
+				...(employeeData.employmentStatus && {
+					employmentStatus: employeeData.employmentStatus,
+				}),
 				bio: employeeData.bio,
 			},
 
@@ -179,7 +201,10 @@ export const updateEmployee = async (req, res) => {
 
 		await session.commitTransaction();
 
-		return res.json({ success: true });
+		return res.status(200).json({
+			success: true,
+			message: "Employee updated successfully.",
+		});
 	} catch (error) {
 		await session.abortTransaction();
 
@@ -189,17 +214,22 @@ export const updateEmployee = async (req, res) => {
 				message: issue.message,
 				code: issue.code,
 			}));
-			return res.status(400).json({ errors: formattedErrors });
+			return res
+				.status(400)
+				.json({ success: false, errors: formattedErrors });
 		}
 
 		if (error.code === 11000) {
-			return res.status(400).json({ error: "Email already exists" });
+			return res
+				.status(400)
+				.json({ success: false, error: "Email already exists." });
 		}
 
 		console.error("Updating employee details error:", error);
-		return res
-			.status(500)
-			.json({ error: "Failed to update employee details" });
+		return res.status(500).json({
+			success: false,
+			error: "Failed to update employee details.",
+		});
 	} finally {
 		session.endSession();
 	}
@@ -216,7 +246,9 @@ export const deleteEmployee = async (req, res) => {
 		const employee = await Employee.findById(id).session(session);
 		if (!employee) {
 			await session.abortTransaction();
-			return res.status(404).json({ error: "Employee not found!" });
+			return res
+				.status(404)
+				.json({ success: false, error: "Employee not found." });
 		}
 
 		employee.isDeleted = true;
@@ -225,10 +257,17 @@ export const deleteEmployee = async (req, res) => {
 		await employee.save({ session });
 
 		await session.commitTransaction();
-		return res.json({ success: true });
+		return res.status(200).json({
+			success: true,
+			message: "Employee deactivated successfully.",
+		});
 	} catch (error) {
 		await session.abortTransaction();
 
-		return res.status(500).json({ error: "Failed to delete employee" });
+		return res
+			.status(500)
+			.json({ success: false, error: "Failed to deactivate employee." });
+	} finally {
+		session.endSession();
 	}
 };

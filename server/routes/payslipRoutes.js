@@ -10,6 +10,6 @@ const payslipRoutes = express.Router();
 
 payslipRoutes.post("/", authenticateToken, protectAdmin, createPayslip);
 payslipRoutes.get("/", authenticateToken, getPayslips);
-payslipRoutes.get("/", authenticateToken, getPayslipById);
+payslipRoutes.get("/:id", authenticateToken, getPayslipById);
 
 export default payslipRoutes;

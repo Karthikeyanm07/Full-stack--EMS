@@ -9,16 +9,20 @@ export const clockInOut = async (req, res) => {
 
 		const employee = await Employee.findOne({ userId: session.userId });
 		if (!employee) {
-			return res.status(404).json({ error: "Employee not found" });
+			return res
+				.status(404)
+				.json({ success: false, error: "Employee not found." });
 		}
 		if (employee.isDeleted) {
 			return res.status(403).json({
-				error: "Your account is deactivated, you cannot Clock in/out",
+				success: false,
+				error: "Your account is deactivated. You cannot clock in or out.",
 			});
 		}
 
-		const today = new Date();
-		today.setHours(0, 0, 0, 0);
+		const today = new Date(
+			Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()),
+		);
 
 		const existing = await Attendance.findOne({
 			employeeId: employee._id,
@@ -29,8 +33,8 @@ export const clockInOut = async (req, res) => {
 
 		if (!existing) {
 			const isLate =
-				now.getHours() > 9 ||
-				(now.getHours() === 9 &&
+				now.getUTCHours() > 9 ||
+				(now.getUTCHours() === 9 &&
 					(now.getMinutes() > 0 || now.getSeconds() > 0));
 
 			const attendance = await Attendance.create({
@@ -40,10 +44,10 @@ export const clockInOut = async (req, res) => {
 				status: isLate ? "LATE" : "PRESENT",
 			});
 
-			return res.json({
+			return res.status(200).json({
 				success: true,
-				type: "CHECK_IN",
-				date: attendance,
+				message: "Checked in successfully.",
+				data: { type: "CHECK_IN", attendance },
 			});
 		} else if (!existing.checkOut) {
 			const checkTime = new Date(existing.checkIn).getTime();
@@ -53,7 +57,10 @@ export const clockInOut = async (req, res) => {
 			existing.checkOut = now;
 
 			// * Compute working hours and Day type
-			const workingHours = parseFloat(diffInHours.toFixed(2));
+			const workingHours = Math.max(
+				0,
+				parseFloat(diffInHours.toFixed(2)),
+			);
 			let dayType = "Half Day";
 
 			if (workingHours >= 8) {
@@ -71,23 +78,26 @@ export const clockInOut = async (req, res) => {
 
 			await existing.save();
 
-			return res.json({
+			return res.status(200).json({
 				success: true,
-				type: "CHECK_OUT",
-				data: existing,
+				message: "Checked out successfully.",
+				data: { type: "CHECK_OUT", attendance: existing },
 			});
 		}
-		// Return the exisiting data If again checkd out
+		// Return the existing data If again checked out
 		else {
 			return res.json({
 				success: true,
-				type: "CHECK_OUT",
-				data: existing,
+				message: "Already checked out for today.",
+				data: { type: "CHECK_OUT", attendance: existing },
 			});
 		}
 	} catch (error) {
 		console.error("Attendance Error:", error);
-		return res.status(500).json({ error: "Operation failed" });
+		return res.status(500).json({
+			success: false,
+			error: "Attendance operation failed. Please try again.",
+		});
 	}
 };
 
@@ -99,7 +109,9 @@ export const getAttendance = async (req, res) => {
 
 		const employee = await Employee.findOne({ userId: session.userId });
 		if (!employee) {
-			return res.status(404).json({ error: "Employee not found" });
+			return res
+				.status(404)
+				.json({ success: false, error: "Employee not found." });
 		}
 
 		const limit = parseInt(req.query.limit || 30);
@@ -110,11 +122,15 @@ export const getAttendance = async (req, res) => {
 			.sort({ date: -1 })
 			.limit(limit);
 
-		return res.json({
-			data: history,
-			employee: { isDeleted: employee.isDeleted },
+		return res.status(200).json({
+			success: true,
+			message: "Attendance records fetched successfully.",
+			data: { history, employee: { isDeleted: employee.isDeleted } },
 		});
 	} catch (error) {
-		return res.status(500).json({ error: "Failed to fetch attendance" });
+		return res.status(500).json({
+			success: false,
+			error: "Failed to fetch attendance records.",
+		});
 	}
 };
