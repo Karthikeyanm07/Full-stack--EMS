@@ -64,7 +64,7 @@ const autoCheckOut = inngest.createFunction(
 				attendance.workingHours = 4;
 				attendance.dayType = "Half day";
 				attendance.status = "LATE";
-				await Attendance.save();
+				await attendance.save();
 			}
 		}
 	},
