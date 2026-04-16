@@ -10,14 +10,29 @@ export const getDashboard = async (req, res) => {
 	try {
 		const session = req.session;
 
+		const today = new Date();
+		const startOfDayUtc = new Date(
+			Date.UTC(
+				today.getUTCFullYear(),
+				today.getUTCMonth(),
+				today.getUTCDate(),
+			),
+		);
+		const startOfNextDayUtc = new Date(
+			Date.UTC(
+				today.getUTCFullYear(),
+				today.getUTCMonth(),
+				today.getUTCDate() + 1,
+			),
+		);
 		if (session.role === "ADMIN") {
 			const [totalEmployees, todayAttendance, pendingLeaves] =
 				await Promise.all([
 					Employee.countDocuments({ isDeleted: { $ne: true } }),
 					Attendance.countDocuments({
 						date: {
-							$gte: new Date(new Date().setHours(0, 0, 0, 0)),
-							$lt: new Date(new Date().setHours(23, 59, 59, 999)),
+							$gte: startOfDayUtc,
+							$lt: startOfNextDayUtc,
 						},
 					}),
 					LeaveApplication.countDocuments({ status: "PENDING" }),
@@ -47,21 +62,19 @@ export const getDashboard = async (req, res) => {
 			}
 
 			const today = new Date();
+			const startOfMonthUtc = new Date(
+				Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), 1),
+			);
+			const startOfNextMonthUtc = new Date(
+				Date.UTC(today.getUTCFullYear(), today.getUTCMonth() + 1, 1),
+			);
 			const [currentMonthAttendance, pendingLeaves, latestPayslip] =
 				await Promise.all([
 					Attendance.countDocuments({
 						employeeId: employee._id,
 						date: {
-							$gte: new Date(
-								today.getFullYear(),
-								today.getMonth(),
-								1,
-							),
-							$lt: new Date(
-								today.getFullYear(),
-								today.getMonth() + 1,
-								1,
-							),
+							$gte: startOfMonthUtc,
+							$lt: startOfNextMonthUtc,
 						},
 					}),
 					LeaveApplication.countDocuments({
