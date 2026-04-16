@@ -26,12 +26,10 @@ export const createPayslip = async (req, res) => {
 			validData.basicSalary + validData.allowances - validData.deductions;
 
 		if (netSalary < 0) {
-			return res
-				.status(400)
-				.json({
-					success: false,
-					error: "Deductions cannot exceed total salary.",
-				});
+			return res.status(400).json({
+				success: false,
+				error: "Deductions cannot exceed total salary.",
+			});
 		}
 
 		const payslip = await Payslip.create({
@@ -54,6 +52,13 @@ export const createPayslip = async (req, res) => {
 			return res
 				.status(400)
 				.json({ success: false, errors: error.issues });
+		}
+
+		if (error.code === 11000) {
+			return res.status(409).json({
+				success: false,
+				error: "Payslip already exists for this employee and month.",
+			});
 		}
 		console.error("Payslip Creation Error:", error);
 		return res

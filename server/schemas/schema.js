@@ -43,6 +43,12 @@ export const createPayslipSchema = z.object({
 	basicSalary: z.coerce
 		.number()
 		.positive("Basic salary must be greater than 0"),
-	allowances: z.coerce.number().default(0),
-	deductions: z.coerce.number().default(0),
+	allowances: z.coerce
+		.number()
+		.min(0, "Allowances cannot be negative")
+		.default(0),
+	deductions: z.coerce
+		.number()
+		.min(0, "Deductions cannot be negative")
+		.default(0),
 });
