@@ -34,7 +34,7 @@ export const getProfile = async (req, res) => {
 };
 
 // Update profile
-// POST /api/profile
+// PUT /api/profile
 export const updateProfile = async (req, res) => {
 	try {
 		const session = req.session;

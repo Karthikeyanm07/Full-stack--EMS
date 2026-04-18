@@ -1,8 +1,19 @@
-import { Link } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
 import LoginLeftSide from "../components/LoginLeftSide";
 import { ArrowRight, ShieldIcon, UserIcon } from "lucide-react";
+import Loading from "../components/Loading.jsx";
+import { useAuth } from "../hooks/useAuth.js";
 
 const LoginLanding = () => {
+	const { user, loading } = useAuth();
+
+	if (loading) {
+		return <Loading />;
+	}
+	// User login la eruntha avanga logout panna login page access panna namma dashboard ku redirect pannidanum
+	if (user) {
+		return <Navigate to={"/dashboard"} />;
+	}
 	const portalOptions = [
 		{
 			to: "/login/admin",

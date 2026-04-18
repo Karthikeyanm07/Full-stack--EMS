@@ -8,7 +8,7 @@ export const createEmployeeSchema = z.object({
 		.max(50, "First name cannot exceed 50 characters"),
 	lastName: z
 		.string()
-		.min(2, "Last name must be at least 2 characters")
+		.min(1, "Last name must be at least 1 characters")
 		.max(50, "Last name cannot exceed 50 characters"),
 	email: z
 		.string()
@@ -21,11 +21,17 @@ export const createEmployeeSchema = z.object({
 	phone: z.string().regex(/^[0-9\-\+\(\)]{10,}$/, "Invalid phone number"),
 	position: z.string().min(2, "Position must be at least 2 characters"),
 	department: z.enum(DEPARTMENTS).default("Engineering"),
-	basicSalary: z.number().positive("Salary must be greater than 0"),
-	allowances: z.number().min(0, "Allowances cannot be negative").default(0),
-	deductions: z.number().min(0, "Deductions cannot be negative").default(0),
+	basicSalary: z.coerce.number().positive("Salary must be greater than 0"),
+	allowances: z.coerce
+		.number()
+		.min(0, "Allowances cannot be negative")
+		.default(0),
+	deductions: z.coerce
+		.number()
+		.min(0, "Deductions cannot be negative")
+		.default(0),
 	employmentStatus: z.enum(["ACTIVE", "INACTIVE"]).default("ACTIVE"),
-	joinDate: z.iso.datetime({ error: "Invalid date format" }),
+	joinDate: z.coerce.date({ error: "Invalid date format" }),
 	role: z
 		.enum(["ADMIN", "EMPLOYEE"], {
 			error: "Role must be ADMIN or EMPLOYEE",
@@ -34,15 +40,17 @@ export const createEmployeeSchema = z.object({
 	bio: z.string().max(500, "Bio cannot exceed 500 characters").default(""),
 });
 
-export const updateEmployeeSchema = createEmployeeSchema.required().partial();
+export const updateEmployeeSchema = createEmployeeSchema.partial().extend({
+	password: z.string().min(8).optional().or(z.literal("")),
+});
 
 export const createPayslipSchema = z.object({
 	employeeId: z.string(),
-	year: z.coerce.number().min(2000).max(2100), // Turns "2024" into 2024
+	year: z.coerce.number().min(2000).max(new Date().getFullYear()), // Turns "2024" into 2024
 	month: z.coerce.number().min(1).max(12),
 	basicSalary: z.coerce
 		.number()
-		.positive("Basic salary must be greater than 0"),
+		.nonnegative("Basic salary must be greater than 0"),
 	allowances: z.coerce
 		.number()
 		.min(0, "Allowances cannot be negative")

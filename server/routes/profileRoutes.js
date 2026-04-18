@@ -5,6 +5,6 @@ import { getProfile, updateProfile } from "../controllers/profileController.js";
 const profileRoutes = express.Router();
 
 profileRoutes.get("/", authenticateToken, getProfile);
-profileRoutes.post("/", authenticateToken, updateProfile);
+profileRoutes.put("/", authenticateToken, updateProfile);
 
 export default profileRoutes;

@@ -5,6 +5,10 @@
     font-family: "Outfit", "Inter";
 }
 
+button{
+    cursor: pointer
+}
+
 @layer utilities {
     /* Card styles */
     .card {
@@ -18,11 +22,11 @@
     .btn-primary {
         @apply bg-linear-to-r from-indigo-600 to-indigo-500 text-white px-5 py-2.5 rounded-md text-sm
             hover:from-indigo-700 hover:to-indigo-600 transition-all duration-200 shadow-md shadow-indigo-500/25
-            active:scale-[0.98];
+            active:scale-[0.98] cursor-pointer;
     }
     .btn-secondary {
         @apply bg-white text-slate-700 border border-slate-200 px-5 py-2.5 rounded-md text-sm
-            hover:bg-slate-50 hover:border-slate-300 transition-all duration-200;
+            hover:bg-slate-50 hover:border-slate-300 transition-all duration-200 cursor-pointer;
     }
 
     /* Input, Select, Textarea styles */

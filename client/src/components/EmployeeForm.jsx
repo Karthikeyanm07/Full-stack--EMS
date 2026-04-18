@@ -2,15 +2,51 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { DEPARTMENTS } from "../assets/data";
 import { Loader2Icon } from "lucide-react";
+import api from "../api/axios.js";
+import toast from "react-hot-toast";
 
 const EmployeeForm = ({ initialData, onSuccess, onCancel }) => {
 	const navigate = useNavigate();
 	const [loading, setLoading] = useState(false);
 	const isEditMode = !!initialData;
-	//new Date(2000-01-20T00:00:00.000Z).toISOString().split("T")[0]
 
 	const handleSubmit = async (e) => {
 		e.preventDefault();
+		setLoading(true);
+
+		const formData = new FormData(e.currentTarget);
+		const payload = Object.fromEntries(formData.entries());
+
+		// Convert numeric form fileds from "string" -> "number"
+		const numericFields = ["basicSalary", "allowances", "deductions"];
+		numericFields.forEach((field) => {
+			if (payload[field]) {
+				payload[field] = Number(payload[field]);
+			}
+		});
+		if (isEditMode) {
+			if (!payload.password || payload.password.trim() === "") {
+				delete payload.password;
+			}
+		}
+
+		try {
+			const method = isEditMode ? "put" : "post";
+			const url = isEditMode
+				? `/employees/${initialData.id}`
+				: `/employees`;
+
+			await api[method](url, payload);
+
+			toast.success(isEditMode ? "Updated!" : "Created!");
+
+			onSuccess ? onSuccess() : navigate("/employees");
+		} catch (error) {
+			console.log(error);
+			toast.error(error.response?.data?.message || "Operation failed");
+		} finally {
+			setLoading(false);
+		}
 	};
 	return (
 		<div>
@@ -186,7 +222,6 @@ const EmployeeForm = ({ initialData, onSuccess, onCancel }) => {
 									type="password"
 									name="password"
 									placeholder="Leave blank to keep current"
-									required
 								/>
 							</div>
 						)}

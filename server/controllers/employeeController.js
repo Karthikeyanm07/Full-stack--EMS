@@ -93,7 +93,7 @@ export const createEmployee = async (req, res) => {
 					basicSalary: validData.basicSalary,
 					allowances: validData.allowances,
 					deductions: validData.deductions,
-					joinDate: new Date(validData.joinDate),
+					joinDate: validData.joinDate,
 					bio: validData.bio,
 				},
 			],
@@ -114,14 +114,15 @@ export const createEmployee = async (req, res) => {
 
 		// Handle Zod validation errors
 		if (error instanceof z.ZodError) {
-			const formattedErrors = error.issues.map((issue) => ({
-				field: issue.path.join("."),
-				message: issue.message,
-				code: issue.code,
-			}));
-			return res
-				.status(400)
-				.json({ success: false, errors: formattedErrors });
+			// 1. Get the first error message from the Zod array
+			const firstErrorMessage = error.issues[0].message;
+
+			// 2. Send it using your 'error' key so the interceptor sees it
+			return res.status(400).json({
+				success: false,
+				error: firstErrorMessage,
+				details: error.errors,
+			});
 		}
 
 		// Handle duplicate email error
@@ -188,7 +189,7 @@ export const updateEmployee = async (req, res) => {
 		if (employeeData.role) {
 			userUpdate.role = employeeData.role;
 		}
-		if (employeeData.password) {
+		if (employeeData.password && employeeData.password.trim() !== "") {
 			userUpdate.password = await bcrypt.hash(employeeData.password, 10);
 		}
 
@@ -209,14 +210,15 @@ export const updateEmployee = async (req, res) => {
 		await session.abortTransaction();
 
 		if (error instanceof z.ZodError) {
-			const formattedErrors = error.issues.map((issue) => ({
-				field: issue.path.join("."),
-				message: issue.message,
-				code: issue.code,
-			}));
-			return res
-				.status(400)
-				.json({ success: false, errors: formattedErrors });
+			// 1. Get the first error message from the Zod array
+			const firstErrorMessage = error.issues[0].message;
+
+			// 2. Send it using your 'error' key so the interceptor sees it
+			return res.status(400).json({
+				success: false,
+				error: firstErrorMessage,
+				details: error.errors,
+			});
 		}
 
 		if (error.code === 11000) {

@@ -1,5 +1,7 @@
 import { CalendarDays, FileText, Loader2, Send, X } from "lucide-react";
-import React, { useState } from "react";
+import { useState, useEffect } from "react";
+import api from "../../api/axios.js";
+import toast from "react-hot-toast";
 
 const ApplyLeaveModal = ({ open, onClose, onSuccess }) => {
 	const [loading, setLoading] = useState(false);
@@ -13,7 +15,35 @@ const ApplyLeaveModal = ({ open, onClose, onSuccess }) => {
 
 	const handleSubmit = async (e) => {
 		e.preventDefault();
+
+		const formData = new FormData(e.currentTarget);
+		const data = Object.fromEntries(formData.entries());
+
+		// Basic check for date logic
+		if (new Date(data.startDate) > new Date(data.endDate)) {
+			return toast.error("End date cannot be before start date");
+		}
+
+		setLoading(true);
+		try {
+			await api.post("/leave", data);
+			toast.success("Form submitted successfully");
+			onSuccess();
+			onClose();
+		} catch (error) {
+			toast.error(
+				error.response?.data?.message || "Failed to submit form",
+			);
+		}
 	};
+
+	/*  If the modal closes while loading is true, it might stay "true" 
+		the next time you open it. Add a useEffect to reset the state whenever the open prop changes: */
+	useEffect(() => {
+		if (!open) {
+			setLoading(false);
+		}
+	}, [open]);
 
 	if (!open) {
 		return null;
@@ -115,9 +145,8 @@ const ApplyLeaveModal = ({ open, onClose, onSuccess }) => {
 							Cancel
 						</button>
 						<button
-							type="button"
+							type="submit"
 							className="btn-primary flex-1 flex items-center justify-center gap-2"
-							onClick={onClose}
 							disabled={loading}
 						>
 							{loading ? (

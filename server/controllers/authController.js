@@ -90,12 +90,10 @@ export const changePassword = async (req, res) => {
 		}
 
 		if (newPassword.length < 8) {
-			return res
-				.status(400)
-				.json({
-					success: false,
-					error: "New password must be at least 8 characters.",
-				});
+			return res.status(400).json({
+				success: false,
+				error: "New password must be at least 8 characters.",
+			});
 		}
 
 		const user = await User.findById(session.userId).select("+password");

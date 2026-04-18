@@ -82,55 +82,55 @@ export const createLeave = async (req, res) => {
 export const getLeaves = async (req, res) => {
 	try {
 		const session = req.session;
-
 		const isAdmin = session.role === "ADMIN";
+
 		if (isAdmin) {
 			const status = req.query.status;
 			const where = status ? { status } : {};
 			const leaves = await LeaveApplication.find(where)
 				.populate("employeeId") // * Join with Employee collection
-				.sort({ createdAt: -1 });
+				.sort({ createdAt: -1 })
+				.lean();
 
-			const data = leaves.map((leave) => {
-				const obj = leave.toObject(); // * Convert Mongoose doc to plain object
-				return {
-					...obj,
-					id: obj._id.toString(),
-					employee: obj.employeeId,
-					employeeId: obj.employeeId?._id.toString(),
-				};
-			});
+			const data = leaves.map((leave) => ({
+				...leave,
+				id: leave._id.toString(),
+				employeeId: leave.employeeId?._id?.toString(),
+				employee: leave.employeeId,
+			}));
 
 			return res.status(200).json({
 				success: true,
-				message: "Leave applications fetched successfully.",
-				data,
+				message: "All leave applications fetched.",
+				data: data,
 			});
 		}
+
 		// If it's Find all leaves for this employee
-		else {
-			const employee = await Employee.findOne({
-				userId: session.userId,
-			}).lean();
-			if (!employee) {
-				return res
-					.status(404)
-					.json({ success: false, error: "Employee not found." });
-			}
-
-			const leaves = await LeaveApplication.find({
-				employeeId: employee._id,
-			}).sort({ createdAt: -1 });
-
-			return res.status(200).json({
-				success: true,
-				message: "Leave applications fetched successfully.",
-				data: {
-					leaves,
-					employee: { ...employee, id: employee._id.toString() },
-				},
-			});
+		const employee = await Employee.findOne({
+			userId: session.userId,
+		}).lean();
+		if (!employee) {
+			return res
+				.status(404)
+				.json({ success: false, error: "Employee not found." });
 		}
+
+		const leaves = await LeaveApplication.find({
+			employeeId: employee._id,
+		})
+			.sort({ createdAt: -1 })
+			.lean();
+
+		return res.status(200).json({
+			success: true,
+			message: "Your leave applications fetched.",
+			data: leaves,
+			employee: {
+				...employee,
+				id: employee._id.toString(),
+			},
+		});
 	} catch (error) {
 		return res.status(500).json({
 			success: false,
@@ -176,6 +176,7 @@ export const updateLeaveStatus = async (req, res) => {
 			data: leave,
 		});
 	} catch (error) {
+		console.error(error);
 		return res
 			.status(500)
 			.json({ success: false, error: "Failed to update leave status." });
